@@ -1,4 +1,4 @@
-import '../../icons/pm4ml/arrow.svg';
+import '../../icons/PM4ML/arrow.svg';
 
 import PropTypes from 'prop-types';
 import React from 'react';

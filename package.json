@@ -1,7 +1,7 @@
 {
   "name": "@pm4ml/mojaloop-payment-manager-ui-components-legacy",
   "version": "1.23.0",
-  "description": "pm4ml UI Components",
+  "description": "PM4ML UI Components",
   "license": "Apache-2.0",
   "main": "dist/index.js",
   "files": [
@@ -12,8 +12,8 @@
     "dist/redux-validation.js"
   ],
   "author": {
-    "name": "Ivan Annovazzi",
-    "email": "ivan@pm4ml.com"
+    "name": "PM4ML",
+    "email": "me@here.com"
   },
   "scripts": {
     "build": "NODE_ENV=production webpack",

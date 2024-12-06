@@ -49,5 +49,5 @@ upload_release:
 	@set -e ;\
 	VERSION=$$(docker run --rm ui-components -s printversion) ;\
 	RELEASE="ui-components/mojaloop-payment-manager-ui-components-legacy-$$VERSION.tgz" ;\
-	echo Releasing to https://pm4ml-release-artifacts.s3.amazonaws.com/$$RELEASE ;\
-	aws s3 cp mojaloop-payment-manager-ui-components-legacy.tgz s3://pm4ml-release-artifacts/$$RELEASE --acl public-read
+	echo Releasing to https://PM4ML-release-artifacts.s3.amazonaws.com/$$RELEASE ;\
+	aws s3 cp mojaloop-payment-manager-ui-components-legacy.tgz s3://PM4ML-release-artifacts/$$RELEASE --acl public-read

@@ -4,7 +4,7 @@ import React from 'react';
 
 import Icon from '../../components/Icon';
 
-const pm4mlIcons = [
+const PM4MLIcons = [
   'circle',
   'business-processes',
   'transmissions',
@@ -272,8 +272,8 @@ const IconBox = ({ icons }) => (
 
 const TestIcon = () => (
   <div style={{ padding: '10px' }}>
-    <h3> pm4ml </h3>
-    <IconBox icons={pm4mlIcons} />
+    <h3> PM4ML </h3>
+    <IconBox icons={PM4MLIcons} />
 
     <h3> Mulesoft </h3>
     <IconBox icons={mulesoftIcons} />

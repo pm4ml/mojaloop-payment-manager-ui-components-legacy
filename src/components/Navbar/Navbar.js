@@ -1,5 +1,5 @@
-import '../../icons/pm4ml/cloud.svg';
-import '../../icons/pm4ml/business-group.svg';
+import '../../icons/PM4ML/cloud.svg';
+import '../../icons/PM4ML/business-group.svg';
 import '../../icons/mule/user-small.svg';
 import './Navbar.scss';
 
@@ -14,7 +14,7 @@ import ScrollBox from '../ScrollBox';
 import Spinner from '../Spinner';
 import logo from './PortXLogoSmall.png';
 
-export default class pm4mlNav extends PureComponent {
+export default class PM4MLNav extends PureComponent {
   render() {
     const { props } = this;
     return (
@@ -26,7 +26,7 @@ export default class pm4mlNav extends PureComponent {
   }
 }
 
-pm4mlNav.defaultProps = {
+PM4MLNav.defaultProps = {
   companyOnly: false,
   user: {},
   companies: [],
@@ -41,7 +41,7 @@ pm4mlNav.defaultProps = {
   onSignout: undefined,
 };
 
-pm4mlNav.propTypes = {
+PM4MLNav.propTypes = {
   companyOnly: PropTypes.bool,
   user: PropTypes.shape(),
   companies: PropTypes.arrayOf(PropTypes.shape()),

@@ -1,4 +1,4 @@
-# pm4ml UI Components
+# PM4ML UI Components
 
 A collection of reusable React components and some Redux / JS utilities.
 
@@ -112,4 +112,4 @@ To publish as a npm module, run the following command `npm publish --access publ
 
 A new release will be published at [https://www.npmjs.com/package/@pm4ml/mojaloop-payment-manager-ui-components-legacy](https://www.npmjs.com/package/@pm4ml/mojaloop-payment-manager-ui-components-legacy)
 
-**Note:** you need to be logged in the _pm4ml_ organization in npm, credentials can be found in _1Password_.
+**Note:** you need to be logged in the _PM4ML_ organization in npm, credentials can be found in _1Password_.
