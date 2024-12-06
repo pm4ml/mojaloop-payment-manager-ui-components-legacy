@@ -15,4 +15,4 @@ EXPOSE 9090
 EXPOSE 8081
 
 ENTRYPOINT ["yarn"]
-CMD ["run", "start"]
+CMD ["run", "test"]
