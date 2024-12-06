@@ -15,4 +15,4 @@ EXPOSE 9090
 EXPOSE 8081
 
 ENTRYPOINT ["yarn"]
-CMD ["run", "test"]
+CMD ["run", "test", "--json", "--outputFile=/usr/local/code/test-results.json"]
