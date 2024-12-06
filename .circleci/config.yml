@@ -3,7 +3,7 @@ version: 2.1
 executors:
   node-docker-executor:
     docker:
-      - image: circleci/node:11-browsers
+      - image: circleci/node:16-browsers  # Use a more recent node version that includes webpack
     working_directory: ~/project
 
 jobs:
@@ -13,6 +13,9 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker
+      - run:
+          name: Install dependencies
+          command: yarn install  # Ensures all dependencies including webpack are installed
       - run:
           name: Build Docker Image
           command: |
@@ -55,6 +58,9 @@ jobs:
     executor: node-docker-executor
     steps:
       - checkout
+      - run:
+          name: Install dependencies
+          command: yarn install  # Install all dependencies, ensuring webpack is available
       - run:
           name: Set Up npm Credentials
           command: |
