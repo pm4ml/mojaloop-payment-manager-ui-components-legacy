@@ -1,0 +1,103 @@
+version: 2.1
+
+orbs:
+  docker: circleci/docker@2.6.0
+
+executors:
+  default-docker:
+    working_directory: &WORKING_DIR /home/circleci/project/git
+    docker:
+      - image: node:16-alpine
+
+  default-machine:
+    working_directory: *WORKING_DIR
+    machine:
+      image: ubuntu-2204:2023.04.2
+
+jobs:
+  Setup:
+    executor: default-docker
+    steps:
+      - run:
+          name: Install general dependencies
+          command: |
+            apk --no-cache add bash git ca-certificates curl openssh-client \
+              make gcc g++ python3 libtool autoconf automake jq \
+              openssl ncurses coreutils libgcc linux-headers grep util-linux binutils findutils
+      - checkout
+      - run:
+          name: Install dependencies using Makefile
+          command: make install
+      - save_cache:
+          key: dependency-cache-v2-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules
+
+  Build:
+    executor: default-docker
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dependency-cache-v2-{{ checksum "yarn.lock" }}
+      - run:
+          name: Run bare build
+          command: make bare_build
+      - run:
+          name: Run bare extract
+          command: make bare_extract
+      - store_artifacts:
+          path: '*.tgz'
+
+  Release:
+    executor: default-docker
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - dependency-cache-v2-{{ checksum "yarn.lock" }}
+      - run:
+          name: Run bare build
+          command: make bare_build
+      - run:
+          name: Run bare extract
+          command: make bare_extract
+      - run:
+          name: Upload release
+          command: make upload_release
+      - store_artifacts:
+          path: '*.tgz'
+
+  Docker Build:
+    executor: default-machine
+    steps:
+      - checkout
+      - run:
+          name: Build Docker image
+          command: docker build -t $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME:local .
+      - run:
+          name: Save Docker image
+          command: docker save -o /tmp/docker-image.tar $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME:local
+      - persist_to_workspace:
+          root: /tmp
+          paths:
+            - ./docker-image.tar
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - Setup:
+          context: pm4ml-ci
+      - Build:
+          context: pm4ml-ci
+          requires:
+            - Setup
+      - Release:
+          context: pm4ml-ci
+          requires:
+            - Build
+      - Docker Build:
+          context: pm4ml-ci
+          requires:
+            - Build
