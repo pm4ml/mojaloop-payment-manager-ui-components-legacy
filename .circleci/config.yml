@@ -6,17 +6,17 @@ orbs:
 executors:
   docker-enabled:
     docker:
-      - image: docker:stable-dind  # Use a stable Docker-in-Docker image
+      - image: docker:stable-dind
     environment:
       DOCKER_HOST: tcp://localhost:2375
-      DOCKER_TLS_VERIFY: "0"
+      DOCKER_TLS_VERIFY: "0"  # Disable TLS verification
     working_directory: /home/circleci/project
 
 jobs:
   Setup:
     executor: docker-enabled
     steps:
-      - setup_remote_docker  # Remove specific Docker version
+      - setup_remote_docker
       - run:
           name: Install General Dependencies
           command: |
