@@ -56,6 +56,9 @@ jobs:
     steps:
       - checkout
       - run:
+          name: Install dependencies
+          command: yarn install  # Ensure all dependencies are installed, including webpack
+      - run:
           name: Set Up npm Credentials
           command: |
             echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > ~/.npmrc
