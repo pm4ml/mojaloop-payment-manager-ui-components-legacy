@@ -12,7 +12,7 @@ import Icon from '../Icon';
 import Modal from '../Modal';
 import ScrollBox from '../ScrollBox';
 import Spinner from '../Spinner';
-import logo from './PortXLogoSmall.png';
+import logo from './PM4MLLogoSmall.png';
 
 export default class PM4MLNav extends PureComponent {
   render() {
@@ -66,7 +66,7 @@ const LeftNav = () => (
     </div>
 
     <div className="Title-Bar">
-      <div className="Title-Text">PortX</div>
+      <div className="Title-Text">PM4ML</div>
     </div>
   </div>
 );
