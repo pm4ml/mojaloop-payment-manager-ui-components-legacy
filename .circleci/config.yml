@@ -1,69 +1,76 @@
 version: 2.1
 
 executors:
-  node-executor:
+  node-docker-executor:
     docker:
-      - image: circleci/node:11.15-browsers
+      - image: circleci/node:11-browsers
     working_directory: ~/project
 
 jobs:
-  # Job to build the Docker image
-  build-docker:
-    executor: node-executor
+  # Job to build Docker image and run tests
+  build-and-test:
+    executor: node-docker-executor
     steps:
       - checkout
       - setup_remote_docker
       - run:
           name: Build Docker Image
           command: |
-            docker build -t my-app .
+            docker build -t pm4ml-ui-components .
+      - run:
+          name: Run Tests Inside Docker
+          command: |
+            docker run --rm pm4ml-ui-components
+      - run:
+          name: Extract Test Results
+          command: |
+            docker create --name temp-container pm4ml-ui-components
+            docker cp temp-container:/usr/local/code/test-results.xml ~/project/test-results.xml || echo "No test results found"
+            docker rm temp-container
+      - store_test_results:
+          path: ~/project/test-results.xml
 
-  # Job to run the build using BuildSpec.yml
-  build-spec:
-    executor: node-executor
+  # Job to run OWASP Dependency-Check
+  vulnerability-test:
+    docker:
+      - image: owasp/dependency-check:latest
     steps:
       - checkout
       - run:
-          name: Install Dependencies
-          command: make install
-      - run:
-          name: Build Application
-          command: make bare_build
-      - run:
-          name: Extract Artifacts
-          command: make bare_extract
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - "*.tgz"
+          name: Run OWASP Dependency-Check with NVD API Key
+          command: |
+            /usr/share/dependency-check/bin/dependency-check.sh \
+              --project "$CIRCLE_PROJECT_REPONAME" \
+              --scan ./ \
+              --format "HTML" \
+              --out ./dependency-check-report.html \
+              --nvdApiKey $NVD_API_KEY
+      - store_artifacts:
+          path: ./dependency-check-report.html
+          destination: dependency-check-report.html
 
-  # Job to run the release build
-  release-build:
-    executor: node-executor
+  # Job to publish to npm
+  npm-publish:
+    executor: node-docker-executor
     steps:
       - checkout
       - run:
-          name: Install Dependencies
-          command: make install
+          name: Set Up npm Credentials
+          command: |
+            echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > ~/.npmrc
       - run:
-          name: Build for Release
-          command: make bare_build
-      - run:
-          name: Extract Release Artifacts
-          command: make bare_extract
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - "*.tgz"
+          name: Publish to npm
+          command: |
+            npm publish
 
 workflows:
   version: 2
-  build-and-release:
+  build-test-scan-publish:
     jobs:
-      - build-docker
-      - build-spec:
+      - build-and-test
+      - vulnerability-test:
           requires:
-            - build-docker
-      - release-build:
+            - build-and-test
+      - npm-publish:
           requires:
-            - build-spec
+            - vulnerability-test
