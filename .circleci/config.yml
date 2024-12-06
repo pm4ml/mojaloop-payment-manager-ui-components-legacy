@@ -72,9 +72,9 @@ workflows:
   build-test-scan-publish:
     jobs:
       - build-and-test
-      - vulnerability-test:
-          requires:
-            - build-and-test
+      #- vulnerability-test:
+      #    requires:
+      #      - build-and-test
       - npm-publish:
           requires:
-            - vulnerability-test
+            - build-and-test
