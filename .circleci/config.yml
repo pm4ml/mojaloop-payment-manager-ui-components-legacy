@@ -9,7 +9,7 @@ executors:
       - image: docker:stable-dind
     environment:
       DOCKER_HOST: tcp://localhost:2375
-      DOCKER_TLS_VERIFY: "0"  # Disable TLS verification
+      DOCKER_TLS_VERIFY: "0"  # Disable Docker TLS
     working_directory: /home/circleci/project
 
 jobs:
@@ -17,6 +17,12 @@ jobs:
     executor: docker-enabled
     steps:
       - setup_remote_docker
+      - run:
+          name: Verify Docker Daemon
+          command: |
+            echo "DOCKER_TLS_VERIFY=$DOCKER_TLS_VERIFY"
+            echo "DOCKER_HOST=$DOCKER_HOST"
+            docker info
       - run:
           name: Install General Dependencies
           command: |
