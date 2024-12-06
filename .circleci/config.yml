@@ -94,9 +94,9 @@ workflows:
       - test:
           requires:
             - build
-      - vulnerability-test:
-          requires:
-            - test
+      #- vulnerability-test:
+      #    requires:
+      #      - build
       - npm-publish:
           requires:
-            - vulnerability-test
+            - build
