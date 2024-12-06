@@ -1,5 +1,5 @@
-import '../../icons/PM4ML/toggle-invisible.svg';
-import '../../icons/PM4ML/toggle-visible.svg';
+import '../../icons/pm4ml/toggle-invisible.svg';
+import '../../icons/pm4ml/toggle-visible.svg';
 import './TextArea.scss';
 
 import PropTypes from 'prop-types';

@@ -1,5 +1,5 @@
-import '../../icons/PM4ML/cloud.svg';
-import '../../icons/PM4ML/business-group.svg';
+import '../../icons/pm4ml/cloud.svg';
+import '../../icons/pm4ml/business-group.svg';
 import '../../icons/mule/user-small.svg';
 import './Navbar.scss';
 

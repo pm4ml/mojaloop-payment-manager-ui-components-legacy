@@ -1,4 +1,4 @@
-import '../../icons/PM4ML/arrow.svg';
+import '../../icons/pm4ml/arrow.svg';
 import './Header.scss';
 
 import find from 'lodash/find';
