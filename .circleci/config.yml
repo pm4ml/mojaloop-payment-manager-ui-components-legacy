@@ -6,7 +6,7 @@ orbs:
 executors:
   docker-enabled:
     docker:
-      - image: docker:20.10.7-dind
+      - image: docker:stable-dind  # Use a stable Docker-in-Docker image
     environment:
       DOCKER_HOST: tcp://localhost:2375
       DOCKER_TLS_VERIFY: "0"
@@ -16,8 +16,7 @@ jobs:
   Setup:
     executor: docker-enabled
     steps:
-      - setup_remote_docker:
-          version: 20.10.7
+      - setup_remote_docker  # Remove specific Docker version
       - run:
           name: Install General Dependencies
           command: |
@@ -36,8 +35,7 @@ jobs:
   Build:
     executor: docker-enabled
     steps:
-      - setup_remote_docker:
-          version: 20.10.7
+      - setup_remote_docker
       - checkout
       - restore_cache:
           keys:
@@ -54,8 +52,7 @@ jobs:
   Release:
     executor: docker-enabled
     steps:
-      - setup_remote_docker:
-          version: 20.10.7
+      - setup_remote_docker
       - checkout
       - restore_cache:
           keys:
