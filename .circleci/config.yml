@@ -4,15 +4,20 @@ orbs:
   docker: circleci/docker@2.6.0
 
 executors:
-  default-docker:
-    working_directory: &WORKING_DIR /home/circleci/project/git
+  docker-enabled:
     docker:
-      - image: node:16-alpine  # Lightweight Node.js image
+      - image: docker:20.10.7-dind
+    environment:
+      DOCKER_HOST: tcp://localhost:2375
+      DOCKER_TLS_VERIFY: "0"
+    working_directory: /home/circleci/project
 
 jobs:
   Setup:
-    executor: default-docker
+    executor: docker-enabled
     steps:
+      - setup_remote_docker:
+          version: 20.10.7
       - run:
           name: Install General Dependencies
           command: |
@@ -21,7 +26,7 @@ jobs:
               openssl ncurses coreutils libgcc linux-headers grep util-linux binutils findutils
       - checkout
       - run:
-          name: Install Project Dependencies
+          name: Install Dependencies Using Makefile
           command: make install
       - save_cache:
           key: dependency-cache-v2-{{ checksum "Makefile" }}
@@ -29,8 +34,10 @@ jobs:
             - node_modules
 
   Build:
-    executor: default-docker
+    executor: docker-enabled
     steps:
+      - setup_remote_docker:
+          version: 20.10.7
       - checkout
       - restore_cache:
           keys:
@@ -45,8 +52,10 @@ jobs:
           path: '*.tgz'
 
   Release:
-    executor: default-docker
+    executor: docker-enabled
     steps:
+      - setup_remote_docker:
+          version: 20.10.7
       - checkout
       - restore_cache:
           keys:
@@ -67,13 +76,10 @@ workflows:
   version: 2
   build_and_test:
     jobs:
-      - Setup:
-          context: pm4ml-ci
+      - Setup
       - Build:
-          context: pm4ml-ci
           requires:
             - Setup
       - Release:
-          context: pm4ml-ci
           requires:
             - Build
