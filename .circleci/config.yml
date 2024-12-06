@@ -7,34 +7,16 @@ executors:
     working_directory: ~/project
 
 jobs:
-  # Job to install dependencies and build the project
-  build:
+  # Job to build Docker image and run tests
+  build-and-test:
     executor: node-docker-executor
     steps:
       - checkout
-      - run:
-          name: Install dependencies
-          command: yarn install  # Ensure all dependencies are installed
+      - setup_remote_docker
       - run:
           name: Build Docker Image
           command: |
-            docker build -t pm4ml-ui-components .  # Build the Docker image
-      - run:
-          name: Build project
-          command: yarn build  # Ensure webpack and other build steps are run
-      - persist_to_workspace:
-          root: ~/project
-          paths:
-            - node_modules  # Persist node_modules to workspace
-            - dist  # Persist the build artifacts (dist, etc.)
-
-  # Job to run tests inside the Docker container
-  test:
-    executor: node-docker-executor
-    steps:
-      - attach_workspace:
-          at: /workspace  # Attach the workspace to access node_modules and build artifacts
-      - checkout
+            docker build -t pm4ml-ui-components .
       - run:
           name: Run Tests Inside Docker
           command: |
@@ -42,11 +24,11 @@ jobs:
       - run:
           name: Copy Test Results to Workspace
           command: |
-            docker cp test-container:/usr/local/code/test-results.json /workspace/test-results.json || echo "No test results found"
+            docker cp test-container:/usr/local/code/test-results.json ~/project/test-results.json || echo "No test results found"
       - store_test_results:
-          path: /workspace/test-results.json
+          path: ~/project/test-results.json
       - store_artifacts:
-          path: /workspace/test-results.json
+          path: ~/project/test-results.json
           destination: test-results.json
 
   # Job to run OWASP Dependency-Check
@@ -54,15 +36,13 @@ jobs:
     docker:
       - image: owasp/dependency-check:latest
     steps:
-      - attach_workspace:
-          at: /workspace  # Attach the workspace to access build artifacts
       - checkout
       - run:
           name: Run OWASP Dependency-Check with NVD API Key
           command: |
             /usr/share/dependency-check/bin/dependency-check.sh \
               --project "$CIRCLE_PROJECT_REPONAME" \
-              --scan /workspace/ \
+              --scan ./ \
               --format "HTML" \
               --out ./dependency-check-report.html \
               --nvdApiKey $NVD_API_KEY
@@ -74,9 +54,10 @@ jobs:
   npm-publish:
     executor: node-docker-executor
     steps:
-      - attach_workspace:
-          at: /workspace  # Attach the workspace to access build artifacts
       - checkout
+      - run:
+          name: Install dependencies
+          command: yarn install  # Ensure all dependencies are installed, including webpack
       - run:
           name: Set Up npm Credentials
           command: |
@@ -84,19 +65,16 @@ jobs:
       - run:
           name: Publish to npm
           command: |
-            npm publish  # Publish the build to npm
+            npm publish
 
 workflows:
   version: 2
   build-test-scan-publish:
     jobs:
-      - build
-      - test:
+      - build-and-test
+      - vulnerability-test:
           requires:
-            - build
-      #- vulnerability-test:
-      #    requires:
-      #      - build
+            - build-and-test
       - npm-publish:
           requires:
-            - test
+            - vulnerability-test
