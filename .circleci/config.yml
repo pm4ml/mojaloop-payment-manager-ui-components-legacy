@@ -7,29 +7,24 @@ executors:
   default-docker:
     working_directory: &WORKING_DIR /home/circleci/project/git
     docker:
-      - image: node:16-alpine
-
-  default-machine:
-    working_directory: *WORKING_DIR
-    machine:
-      image: ubuntu-2204:2023.04.2
+      - image: node:16-alpine  # Lightweight Node.js image
 
 jobs:
   Setup:
     executor: default-docker
     steps:
       - run:
-          name: Install general dependencies
+          name: Install General Dependencies
           command: |
             apk --no-cache add bash git ca-certificates curl openssh-client \
               make gcc g++ python3 libtool autoconf automake jq \
               openssl ncurses coreutils libgcc linux-headers grep util-linux binutils findutils
       - checkout
       - run:
-          name: Install dependencies using Makefile
+          name: Install Project Dependencies
           command: make install
       - save_cache:
-          key: dependency-cache-v2-{{ checksum "yarn.lock" }}
+          key: dependency-cache-v2-{{ checksum "Makefile" }}
           paths:
             - node_modules
 
@@ -39,12 +34,12 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependency-cache-v2-{{ checksum "yarn.lock" }}
+            - dependency-cache-v2-{{ checksum "Makefile" }}
       - run:
-          name: Run bare build
+          name: Build Project
           command: make bare_build
       - run:
-          name: Run bare extract
+          name: Extract Build Artifacts
           command: make bare_extract
       - store_artifacts:
           path: '*.tgz'
@@ -55,33 +50,18 @@ jobs:
       - checkout
       - restore_cache:
           keys:
-            - dependency-cache-v2-{{ checksum "yarn.lock" }}
+            - dependency-cache-v2-{{ checksum "Makefile" }}
       - run:
-          name: Run bare build
+          name: Build Project
           command: make bare_build
       - run:
-          name: Run bare extract
+          name: Extract Build Artifacts
           command: make bare_extract
       - run:
-          name: Upload release
+          name: Upload Release
           command: make upload_release
       - store_artifacts:
           path: '*.tgz'
-
-  Docker Build:
-    executor: default-machine
-    steps:
-      - checkout
-      - run:
-          name: Build Docker image
-          command: docker build -t $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME:local .
-      - run:
-          name: Save Docker image
-          command: docker save -o /tmp/docker-image.tar $CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME:local
-      - persist_to_workspace:
-          root: /tmp
-          paths:
-            - ./docker-image.tar
 
 workflows:
   version: 2
@@ -94,10 +74,6 @@ workflows:
           requires:
             - Setup
       - Release:
-          context: pm4ml-ci
-          requires:
-            - Build
-      - Docker Build:
           context: pm4ml-ci
           requires:
             - Build
