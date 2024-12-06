@@ -1,88 +1,69 @@
 version: 2.1
 
-orbs:
-  docker: circleci/docker@2.6.0
-
 executors:
-  docker-enabled:
+  node-executor:
     docker:
-      - image: docker:stable-dind
-    environment:
-      DOCKER_HOST: tcp://localhost:2375
-      DOCKER_TLS_VERIFY: "0"  # Disable Docker TLS
-    working_directory: /home/circleci/project
+      - image: circleci/node:11.15-browsers
+    working_directory: ~/project
 
 jobs:
-  Setup:
-    executor: docker-enabled
+  # Job to build the Docker image
+  build-docker:
+    executor: node-executor
     steps:
+      - checkout
       - setup_remote_docker
       - run:
-          name: Verify Docker Daemon
+          name: Build Docker Image
           command: |
-            echo "DOCKER_TLS_VERIFY=$DOCKER_TLS_VERIFY"
-            echo "DOCKER_HOST=$DOCKER_HOST"
-            docker info
-      - run:
-          name: Install General Dependencies
-          command: |
-            apk --no-cache add bash git ca-certificates curl openssh-client \
-              make gcc g++ python3 libtool autoconf automake jq \
-              openssl ncurses coreutils libgcc linux-headers grep util-linux binutils findutils
+            docker build -t my-app .
+
+  # Job to run the build using BuildSpec.yml
+  build-spec:
+    executor: node-executor
+    steps:
       - checkout
       - run:
-          name: Install Dependencies Using Makefile
+          name: Install Dependencies
           command: make install
-      - save_cache:
-          key: dependency-cache-v2-{{ checksum "Makefile" }}
+      - run:
+          name: Build Application
+          command: make bare_build
+      - run:
+          name: Extract Artifacts
+          command: make bare_extract
+      - persist_to_workspace:
+          root: ~/project
           paths:
-            - node_modules
+            - "*.tgz"
 
-  Build:
-    executor: docker-enabled
+  # Job to run the release build
+  release-build:
+    executor: node-executor
     steps:
-      - setup_remote_docker
       - checkout
-      - restore_cache:
-          keys:
-            - dependency-cache-v2-{{ checksum "Makefile" }}
       - run:
-          name: Build Project
+          name: Install Dependencies
+          command: make install
+      - run:
+          name: Build for Release
           command: make bare_build
       - run:
-          name: Extract Build Artifacts
+          name: Extract Release Artifacts
           command: make bare_extract
-      - store_artifacts:
-          path: '*.tgz'
-
-  Release:
-    executor: docker-enabled
-    steps:
-      - setup_remote_docker
-      - checkout
-      - restore_cache:
-          keys:
-            - dependency-cache-v2-{{ checksum "Makefile" }}
-      - run:
-          name: Build Project
-          command: make bare_build
-      - run:
-          name: Extract Build Artifacts
-          command: make bare_extract
-      - run:
-          name: Upload Release
-          command: make upload_release
-      - store_artifacts:
-          path: '*.tgz'
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - "*.tgz"
 
 workflows:
   version: 2
-  build_and_test:
+  build-and-release:
     jobs:
-      - Setup
-      - Build:
+      - build-docker
+      - build-spec:
           requires:
-            - Setup
-      - Release:
+            - build-docker
+      - release-build:
           requires:
-            - Build
+            - build-spec
