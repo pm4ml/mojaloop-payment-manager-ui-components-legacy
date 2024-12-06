@@ -99,4 +99,4 @@ workflows:
       #      - build
       - npm-publish:
           requires:
-            - build
+            - test
