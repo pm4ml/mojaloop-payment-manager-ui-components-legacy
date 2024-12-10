@@ -1,5 +1,3 @@
-version: 2.1
-
 executors:
   node-docker-executor:
     docker:
@@ -72,9 +70,9 @@ workflows:
   build-test-scan-publish:
     jobs:
       - build-and-test
-      #- vulnerability-test:
-      #    requires:
-      #      - build-and-test
+      - vulnerability-test:
+          requires:
+           - build-and-test
       - npm-publish:
           requires:
-            - build-and-test
+            - vulnerability-test
