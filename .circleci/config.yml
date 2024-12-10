@@ -15,21 +15,15 @@ jobs:
       - setup_remote_docker
       - run:
           name: Build Docker Image
-          command: |
-            docker build -t pm4ml-ui-components .
+          command: docker build -t pm4ml-ui-components .
       - run:
           name: Run Tests Inside Docker
-          command: |
-            docker run --name test-container --rm pm4ml-ui-components
+          command: docker run --name test-container pm4ml-ui-components
       - run:
           name: Copy Test Results to Workspace
-          command: |
-            docker cp test-container:/usr/local/code/test-results.json ~/project/test-results.json || echo "No test results found"
+          command: docker cp test-container:/usr/local/code/test-results.xml ./test-results.xml || echo "No test results found"
       - store_test_results:
-          path: ~/project/test-results.json
-      - store_artifacts:
-          path: ~/project/test-results.json
-          destination: test-results.json
+          path: ./test-results.xml
 
   # Job to run OWASP Dependency-Check
   vulnerability-test:
