@@ -7,28 +7,20 @@ executors:
     working_directory: ~/project
 
 jobs:
+  # Job to build Docker image and run tests
   build-and-test:
     executor: node-docker-executor
     steps:
       - checkout
       - setup_remote_docker
-      - restore_cache:
-          keys:
-            - yarn-cache-{{ checksum "yarn.lock" }}
-            - yarn-cache-
-      - run:
-          name: Install Dependencies
-          command: yarn install
-      - save_cache:
-          paths:
-            - ~/.cache/yarn
-          key: yarn-cache-{{ checksum "yarn.lock" }}
       - run:
           name: Build Docker Image
-          command: docker build -t pm4ml-ui-components .
+          command: |
+            docker build -t pm4ml-ui-components .
       - run:
           name: Run Tests Inside Docker
-          command: docker run --name test-container pm4ml-ui-components
+          command: |
+            docker run --name test-container --rm pm4ml-ui-components
       - run:
           name: Copy Test Results to Workspace
           command: |
@@ -44,19 +36,12 @@ jobs:
           path: ./test-results.xml
           destination: test-results.xml
 
+  # Job to run OWASP Dependency-Check
   vulnerability-test:
     docker:
       - image: owasp/dependency-check:latest
-    working_directory: ~/project
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - yarn-cache-{{ checksum "yarn.lock" }}
-            - yarn-cache-
-      - run:
-          name: Install Dependencies
-          command: yarn install
       - run:
           name: Run OWASP Dependency-Check with NVD API Key
           command: |
@@ -65,34 +50,27 @@ jobs:
               --scan ./ \
               --format "HTML" \
               --out ./dependency-check-report.html \
-              --nvdApiKey $NVD_API_KEY \
-              --disableNodeAudit || echo "Dependency-Check completed with warnings"
+              --nvdApiKey $NVD_API_KEY
       - store_artifacts:
           path: ./dependency-check-report.html
           destination: dependency-check-report.html
-        
 
+  # Job to publish to npm
   npm-publish:
     executor: node-docker-executor
     steps:
       - checkout
-      - restore_cache:
-          keys:
-            - yarn-cache-{{ checksum "yarn.lock" }}
-            - yarn-cache-
       - run:
           name: Install dependencies
-          command: yarn install
+          command: yarn install  # Ensure all dependencies are installed, including webpack
       - run:
           name: Set Up npm Credentials
           command: |
             echo "//registry.npmjs.org/:_authToken=$NPM_AUTH_TOKEN" > ~/.npmrc
       - run:
           name: Publish to npm
-          command: npm publish
-      - run:
-          name: Clean Up npm Credentials
-          command: rm -f ~/.npmrc
+          command: |
+            npm publish
 
 workflows:
   version: 2
