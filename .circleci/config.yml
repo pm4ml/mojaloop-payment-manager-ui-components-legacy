@@ -18,14 +18,15 @@ jobs:
             - yarn-cache-
       - run:
           name: Install Dependencies
-          command: yarn install
+          command: |
+            yarn install --frozen-lockfile
       - save_cache:
           paths:
             - ~/.cache/yarn
           key: yarn-cache-{{ checksum "yarn.lock" }}
       - run:
-          name: Build Docker Image with Cache
-          command: docker build --cache-from pm4ml-ui-components -t pm4ml-ui-components .
+          name: Build Docker Image
+          command: docker build -t pm4ml-ui-components .
       - run:
           name: Run Tests Inside Docker
           command: docker run --name test-container pm4ml-ui-components
@@ -45,9 +46,7 @@ jobs:
           destination: test-results.xml
 
   vulnerability-test:
-    docker:
-      - image: owasp/dependency-check:latest
-    working_directory: ~/project
+    executor: node-docker-executor
     steps:
       - checkout
       - restore_cache:
@@ -56,14 +55,7 @@ jobs:
             - yarn-cache-
       - run:
           name: Install Dependencies
-          command: yarn install
-      - run:
-          name: Validate NVD API Key
-          command: |
-            if [ -z "$NVD_API_KEY" ]; then
-              echo "NVD_API_KEY is not set. Exiting.";
-              exit 1;
-            fi
+          command: yarn install --frozen-lockfile
       - run:
           name: Run OWASP Dependency-Check with NVD API Key
           command: |
@@ -87,8 +79,8 @@ jobs:
             - yarn-cache-{{ checksum "yarn.lock" }}
             - yarn-cache-
       - run:
-          name: Install dependencies
-          command: yarn install
+          name: Install Dependencies
+          command: yarn install --frozen-lockfile
       - run:
           name: Set Up npm Credentials
           command: |
