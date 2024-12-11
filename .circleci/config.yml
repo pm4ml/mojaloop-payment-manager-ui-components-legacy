@@ -12,7 +12,7 @@ jobs:
     steps:
       - checkout
       - setup_remote_docker:
-          version: 20.10.7
+          version: 19.03.12
       - restore_cache:
           keys:
             - yarn-cache-{{ checksum "yarn.lock" }}
