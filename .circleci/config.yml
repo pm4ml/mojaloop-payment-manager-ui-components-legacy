@@ -11,8 +11,7 @@ jobs:
     executor: node-docker-executor
     steps:
       - checkout
-      - setup_remote_docker:
-          version: 19.03.12
+      - setup_remote_docker
       - restore_cache:
           keys:
             - yarn-cache-{{ checksum "yarn.lock" }}
