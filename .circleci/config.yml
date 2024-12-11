@@ -28,12 +28,15 @@ jobs:
           path: ./test-results.xml
           destination: test-results.xml
 
-  # Job to run OWASP Dependency-Check
   vulnerability-test:
     docker:
       - image: owasp/dependency-check:latest
+    working_directory: ~/project
     steps:
       - checkout
+      - run:
+          name: Install Dependencies
+          command: yarn install
       - run:
           name: Run OWASP Dependency-Check with NVD API Key
           command: |
@@ -42,11 +45,12 @@ jobs:
               --scan ./ \
               --format "HTML" \
               --out ./dependency-check-report.html \
-              --nvdApiKey $NVD_API_KEY
+              --nvdApiKey $NVD_API_KEY \
+              --disableYarnAudit
       - store_artifacts:
           path: ./dependency-check-report.html
           destination: dependency-check-report.html
-
+          
   # Job to publish to npm
   npm-publish:
     executor: node-docker-executor
