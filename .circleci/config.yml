@@ -45,7 +45,9 @@ jobs:
           destination: test-results.xml
 
   vulnerability-test:
-    executor: node-docker-executor
+    docker:
+      - image: owasp/dependency-check:latest
+    working_directory: ~/project
     steps:
       - checkout
       - restore_cache:
@@ -64,10 +66,11 @@ jobs:
               --format "HTML" \
               --out ./dependency-check-report.html \
               --nvdApiKey $NVD_API_KEY \
-              --disableYarnAudit || echo "Dependency-Check completed with warnings"
+              --disableNodeAudit || echo "Dependency-Check completed with warnings"
       - store_artifacts:
           path: ./dependency-check-report.html
           destination: dependency-check-report.html
+        
 
   npm-publish:
     executor: node-docker-executor
